@@ -63,3 +63,10 @@ AdFlux 站点及两个内容网站，分别部署于三个不同域名下，其�
 1. 通过读取 `<meta>` 标签，获取该网页对应的类型（并上报 AdFlux 服务器）；
 2. 引入 `tracker.html` 作为 `<iframe>`（并隐藏），（同时将预留的广告位替换为实际的广告链接）；
 3. `tracker.html` 中，使用 `tracker.js` 读取或设置三方 Cookie（并上报 AdFlux 服务器）。
+
+## 参考资料
+
+-   [第三方 Cookie - MDN](https://developer.mozilla.org/zh-CN/docs/Web/Privacy/Guides/Third-party_cookies)
+-   [存储访问 API - MDN](https://developer.mozilla.org/en-US/docs/Web/API/Storage_Access_API)
+-   [SameSite Cookie 说明 - web.dev](https://web.dev/articles/samesite-cookies-explained?hl=zh-cn)
+-   [第三方 Cookie 限制 - Google Privacy Sandbox](https://privacysandbox.google.com/cookies/prepare/overview?hl=zh-cn)
