@@ -26,7 +26,8 @@
     </head>
     <body>
         <h1>Check console log for details!</h1>
-        <script type="module" src="./main.ts"></script>
+        <script type="module" src="./main.ts" defer></script>
+        <ad-flux-slot style="height: 80px; width: 320px"></ad-flux-slot>
         <script>
             const display = (element) => {
                 const node = document.createElement('p');

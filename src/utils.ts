@@ -54,3 +54,19 @@ export const getTrackId = async () => {
     }
     return trackId;
 };
+
+// Create HTML Element
+export const createElement = (
+    tag: string,
+    attrs: Record<string, string> = {},
+    textContent?: string,
+) => {
+    const element = document.createElement(tag);
+    for (const [key, value] of Object.entries(attrs)) {
+        element.setAttribute(key, value);
+    }
+    if (textContent) {
+        element.textContent = textContent;
+    }
+    return element;
+};

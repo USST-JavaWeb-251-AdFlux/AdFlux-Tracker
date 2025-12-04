@@ -1,0 +1,18 @@
+ad-flux-slot {
+    opacity: 0;
+    transform: translateY(8px);
+    background-color: #b2dfdb;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+ad-flux-slot.is-loaded {
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+        opacity 0.5s ease-out,
+        transform 0.5s ease-out;
+}
