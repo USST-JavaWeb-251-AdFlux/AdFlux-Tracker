@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="adflux-page-category" content="Debug" />
+        <title>Content Page</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+            }
+            html,
+            body {
+                height: 100%;
+                width: 100%;
+            }
+            body {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                justify-content: center;
+                align-items: center;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Check console log for details!</h1>
+        <script type="module" src="./main.ts"></script>
+        <script>
+            const display = (element) => {
+                const node = document.createElement('p');
+                node.textContent = element.outerHTML;
+                document.body.appendChild(node);
+            };
+            display(document.querySelector('meta[name="adflux-page-category"]'));
+            display(document.body.querySelector('script[type="module"]'));
+        </script>
+    </body>
+</html>

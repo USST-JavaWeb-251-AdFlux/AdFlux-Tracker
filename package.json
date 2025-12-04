@@ -1,0 +1,36 @@
+{
+    "name": "adflux-track",
+    "private": true,
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc && vite build --mode production",
+        "build:staging": "tsc && vite build --mode staging",
+        "preview": "vite preview",
+        "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
+        "format": "prettier --write src/",
+        "prepare": "husky"
+    },
+    "dependencies": {
+        "universal-cookie": "^8.0.1"
+    },
+    "devDependencies": {
+        "@commitlint/cli": "^20.1.0",
+        "@commitlint/config-conventional": "^20.0.0",
+        "@eslint/js": "^9.39.1",
+        "@types/node": "^24.10.1",
+        "eslint": "^9.39.1",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-prettier": "^5.5.4",
+        "husky": "^9.1.7",
+        "jiti": "^2.6.1",
+        "lint-staged": "^16.2.7",
+        "prettier": "^3.7.4",
+        "typescript": "~5.9.3",
+        "typescript-eslint": "^8.48.1",
+        "vite": "^7.2.4",
+        "vite-plugin-html-minifier": "^1.0.5",
+        "vite-plugin-remove-console": "^2.2.0"
+    }
+}
