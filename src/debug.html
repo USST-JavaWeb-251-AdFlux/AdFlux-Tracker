@@ -26,8 +26,8 @@
     </head>
     <body>
         <h1>Check console log for details!</h1>
+        <adflux-slot style="height: 80px; width: 320px"></adflux-slot>
         <script type="module" src="./main.ts" defer></script>
-        <ad-flux-slot style="height: 80px; width: 320px"></ad-flux-slot>
         <script>
             const display = (element) => {
                 const node = document.createElement('p');
@@ -35,6 +35,7 @@
                 document.body.appendChild(node);
             };
             display(document.querySelector('meta[name="adflux-page-category"]'));
+            display(document.querySelector('adflux-slot'));
             display(document.body.querySelector('script[type="module"]'));
         </script>
     </body>

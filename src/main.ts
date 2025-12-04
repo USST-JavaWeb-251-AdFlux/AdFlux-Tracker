@@ -2,7 +2,7 @@
 // Import entry for content sites
 
 import { getMeta, createElement } from './utils';
-import style from './style.css?raw';
+import style from './style.css?inline';
 
 // Inject Tracker Iframe
 const trackerUrl = new URL(import.meta.resolve('./tracker.html'));
@@ -15,16 +15,18 @@ document.body.append(
 );
 
 // Inject Style
-document.head.append(createElement('style', {}, style));
+if (!document.getElementById('adflux-injected-style')) {
+    document.head.append(createElement('style', { id: 'adflux-injected-style' }, style));
+}
 
 // Define AdFluxSlot Element
 class AdFluxSlot extends HTMLElement {
     connectedCallback() {
-        this.innerHTML = '广告内容';
+        this.textContent = '广告内容';
         requestAnimationFrame(() => {
             // TODO: Pre-load ad image then add is-loaded class
             this.classList.add('is-loaded');
         });
     }
 }
-customElements.define('ad-flux-slot', AdFluxSlot);
+customElements.define('adflux-slot', AdFluxSlot);

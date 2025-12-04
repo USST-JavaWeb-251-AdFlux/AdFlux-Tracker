@@ -1,6 +1,6 @@
-ad-flux-slot {
+adflux-slot {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(4px);
     background-color: #b2dfdb;
     border-radius: 12px;
     display: flex;
@@ -9,7 +9,7 @@ ad-flux-slot {
     align-items: center;
 }
 
-ad-flux-slot.is-loaded {
+adflux-slot.is-loaded {
     opacity: 1;
     transform: translateY(0);
     transition:
