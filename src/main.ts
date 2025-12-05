@@ -17,8 +17,9 @@ class AdFluxSlot extends HTMLElement {
 }
 
 // Upgrade AdFluxSlot Elements after Tracker is Ready
+const trackerOrigin = new URL(import.meta.url).origin;
 const handleMessage = (event: MessageEvent) => {
-    if (event.origin !== new URL(import.meta.url).origin || event.data !== 'AdFlux-TrackerReady') {
+    if (event.origin !== trackerOrigin || event.data !== 'AdFlux-TrackerReady') {
         return;
     }
     customElements.define('adflux-slot', AdFluxSlot);
