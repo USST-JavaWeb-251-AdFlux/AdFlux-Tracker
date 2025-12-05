@@ -8,7 +8,7 @@ const params = new URLSearchParams(window.location.search);
 const trackId = await getTrackId();
 const category = params.get('category') ?? 'Unknown';
 const origin = params.get('origin');
-if (!origin || origin === ' ' || origin === '*') {
+if (!origin || origin.trim() === '' || origin === '*') {
     throw new Error('Invalid origin parameter');
 }
 
