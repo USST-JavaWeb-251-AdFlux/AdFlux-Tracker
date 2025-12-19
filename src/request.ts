@@ -28,7 +28,7 @@ export async function request<T extends ApiResponse>(
     };
 
     const params = new URLSearchParams();
-    if (init.method === 'GET' && opts.params) {
+    if (opts.params) {
         Object.entries(opts.params).forEach(([key, value]) => {
             if (value !== undefined && value !== null) {
                 params.append(key, String(value));
