@@ -35,6 +35,7 @@ if (!document.getElementById('adflux-injected-style')) {
 // Inject Tracker Iframe
 if (!document.getElementById('adflux-tracker')) {
     const trackerUrl = new URL(import.meta.resolve('./tracker.html'));
+    // TODO: Consider using MutationObserver to watch for meta tag changes
     trackerUrl.searchParams.set('category', getMeta('adflux-page-category') ?? 'Not-Specified');
     trackerUrl.searchParams.set('origin', window.location.origin);
     document.body.append(h<HTMLIFrameElement>('iframe#adflux-tracker', { src: trackerUrl.href }));

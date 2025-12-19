@@ -6,7 +6,7 @@ import { configs as eslintConfigs } from '@eslint/js';
 
 export default defineConfig(
     eslintConfigs.recommended,
-    ...tseslint.configs.strictTypeChecked,
+    ...tseslint.configs.strict,
 
     {
         files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
