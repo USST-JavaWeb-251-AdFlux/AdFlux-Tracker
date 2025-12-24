@@ -1,0 +1,58 @@
+name: Build and Release
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Create environment file
+        run: echo "$ENV_CONTENT" > .env
+        env:
+          ENV_CONTENT: ${{ secrets.ENV_FILE }}
+
+      - name: Build
+        run: pnpm build
+
+      - name: Set hash
+        id: vars
+        run: echo "hash=$(git rev-parse --short=7 HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Compress build output
+        run: cd dist && zip -r ../adflux-tracker-${{ steps.vars.outputs.hash }}.zip .
+
+      - name: Auto Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: rel-${{ steps.vars.outputs.hash }}
+          name: Release-${{ steps.vars.outputs.hash }}
+          draft: false
+          prerelease: false
+          files: adflux-tracker-${{ steps.vars.outputs.hash }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
