@@ -39,20 +39,22 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Set hash
+      - name: Set vars
         id: vars
-        run: echo "hash=$(git rev-parse --short=7 HEAD)" >> $GITHUB_OUTPUT
+        run: |
+          echo "hash=$(git rev-parse --short=7 HEAD)" >> $GITHUB_OUTPUT
+          echo "time=$(git log -1 --format=%cd --date=format:%Y%m%d%H%M)" >> $GITHUB_OUTPUT
 
       - name: Compress build output
-        run: cd dist && zip -r ../adflux-tracker-${{ steps.vars.outputs.hash }}.zip .
+        run: cd dist && zip -r ../dist-${{ steps.vars.outputs.hash }}.zip .
 
       - name: Auto Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: rel-${{ steps.vars.outputs.hash }}
-          name: Release-${{ steps.vars.outputs.hash }}
+          name: Release-${{ steps.vars.outputs.time }}-${{ steps.vars.outputs.hash }}
           draft: false
           prerelease: false
-          files: adflux-tracker-${{ steps.vars.outputs.hash }}.zip
+          files: dist-${{ steps.vars.outputs.hash }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
