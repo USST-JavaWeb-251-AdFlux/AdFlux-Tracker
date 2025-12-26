@@ -36,15 +36,17 @@ jobs:
         env:
           ENV_CONTENT: ${{ secrets.ENV_FILE }}
 
-      - name: Build
-        run: pnpm build
-
       - name: Set vars
         id: vars
         run: |
           export TZ='Asia/Shanghai'
           echo "hash=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
           echo "time=$(git log -1 --format=%cd --date=format-local:%Y.%m.%d.%H%M)" >> $GITHUB_OUTPUT
+
+      - name: Build
+        run: pnpm build
+        env:
+          VITE_APP_VERSION: ${{ steps.vars.outputs.hash }}
 
       - name: Compress build output
         run: cd dist && zip -r ../dist-${{ steps.vars.outputs.hash }}.zip .
