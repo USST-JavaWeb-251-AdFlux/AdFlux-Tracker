@@ -42,8 +42,9 @@ jobs:
       - name: Set vars
         id: vars
         run: |
-          echo "hash=$(git rev-parse --short=7 HEAD)" >> $GITHUB_OUTPUT
-          echo "time=$(git log -1 --format=%cd --date=format:%Y%m%d%H%M)" >> $GITHUB_OUTPUT
+          export TZ='Asia/Shanghai'
+          echo "hash=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          echo "time=$(git log -1 --format=%cd --date=format-local:%Y.%m.%d.%H%M)" >> $GITHUB_OUTPUT
 
       - name: Compress build output
         run: cd dist && zip -r ../dist-${{ steps.vars.outputs.hash }}.zip .
@@ -51,8 +52,8 @@ jobs:
       - name: Auto Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: rel-${{ steps.vars.outputs.hash }}
-          name: Release-${{ steps.vars.outputs.time }}-${{ steps.vars.outputs.hash }}
+          tag_name: v${{ steps.vars.outputs.time }}-${{ steps.vars.outputs.hash }}
+          name: Release-${{ steps.vars.outputs.hash }}
           draft: false
           prerelease: false
           files: dist-${{ steps.vars.outputs.hash }}.zip
