@@ -33,10 +33,43 @@ if (!document.getElementById('adflux-injected-style')) {
 }
 
 // Inject Tracker Iframe
-if (!document.getElementById('adflux-tracker')) {
-    const trackerUrl = new URL(import.meta.resolve('./tracker.html'));
-    // TODO: Consider using MutationObserver to watch for meta tag changes
-    trackerUrl.searchParams.set('category', getMeta('adflux-page-category') ?? 'Not-Specified');
-    trackerUrl.searchParams.set('origin', window.location.origin);
-    document.body.append(h<HTMLIFrameElement>('iframe#adflux-tracker', { src: trackerUrl.href }));
+if (document.getElementById('adflux-tracker')) {
+    throw new Error('AdFlux tracker already exists');
 }
+
+let currentCategory = getMeta('adflux-page-category') ?? '';
+const trackerUrl = new URL(import.meta.resolve('./tracker.html'));
+trackerUrl.searchParams.set('origin', window.location.origin);
+trackerUrl.searchParams.set('domain', window.location.hostname);
+trackerUrl.searchParams.set('category', currentCategory);
+
+const trackerIframe = h<HTMLIFrameElement>('iframe#adflux-tracker', {
+    src: trackerUrl.href,
+    style: { display: 'none' },
+});
+document.body.append(trackerIframe);
+
+// Watch for Category Meta Changes
+const observer = new MutationObserver(() => {
+    const newCategory = getMeta('adflux-page-category') ?? '';
+    if (newCategory !== currentCategory) {
+        currentCategory = newCategory;
+        trackerIframe.contentWindow?.postMessage(
+            {
+                type: 'updateCategory',
+                categoryName: newCategory,
+            },
+            trackerOrigin,
+        );
+    }
+});
+observer.observe(document.head, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['content', 'name'],
+});
+
+window.addEventListener('beforeunload', () => {
+    observer.disconnect();
+});
