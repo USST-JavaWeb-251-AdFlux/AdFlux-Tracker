@@ -69,3 +69,7 @@ observer.observe(document.head, {
     attributes: true,
     attributeFilter: ['content', 'name'],
 });
+
+window.addEventListener('beforeunload', () => {
+    observer.disconnect();
+});
