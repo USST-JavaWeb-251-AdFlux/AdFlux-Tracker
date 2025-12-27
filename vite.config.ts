@@ -20,9 +20,11 @@ export default defineConfig(({ mode }) => {
                             res.end('[Dev]');
                             return;
                         }
-                        if (req.url === '/main.js') {
+                        if (req.url && /\.[tj]s$/.test(req.url)) {
                             try {
-                                const result = await server.transformRequest('/main.ts');
+                                const result = await server.transformRequest(
+                                    req.url.replace(/\.js/, '.ts'),
+                                );
                                 if (result) {
                                     res.setHeader('Content-Type', 'application/javascript');
                                     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -74,6 +76,12 @@ export default defineConfig(({ mode }) => {
             strictPort: true,
         },
     };
+
+    config.define = {};
+    for (const [key, value] of Object.entries(env)) {
+        if (!key.startsWith('VITE_')) continue;
+        config.define[`import.meta.env.${key}`] = JSON.stringify(value);
+    }
 
     try {
         const apiHost = new URL(env.VITE_API_HOST);
