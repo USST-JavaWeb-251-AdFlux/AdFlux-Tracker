@@ -30,10 +30,10 @@ export default defineConfig(({ mode }) => {
                                     return;
                                 }
                             } catch (e) {
+                                console.error(e);
                                 res.statusCode = 500;
                                 res.setHeader('Content-Type', 'text/plain; charset=utf-8');
                                 res.end(e instanceof Error ? e.message : String(e));
-                                console.error(e);
                                 return;
                             }
                         }
