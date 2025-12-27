@@ -14,11 +14,28 @@ export default defineConfig(({ mode }) => {
             {
                 name: 'version-file',
                 configureServer(server) {
-                    server.middlewares.use((req, res, next) => {
+                    server.middlewares.use(async (req, res, next) => {
                         if (req.url === '/version.txt') {
                             res.setHeader('Content-Type', 'text/plain');
                             res.end('[Dev]');
                             return;
+                        }
+                        if (req.url === '/main.js') {
+                            try {
+                                const result = await server.transformRequest('/main.ts');
+                                if (result) {
+                                    res.setHeader('Content-Type', 'application/javascript');
+                                    res.setHeader('Access-Control-Allow-Origin', '*');
+                                    res.end(result.code);
+                                    return;
+                                }
+                            } catch (e) {
+                                console.error(e);
+                                res.statusCode = 500;
+                                res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+                                res.end(e instanceof Error ? e.message : String(e));
+                                return;
+                            }
                         }
                         next();
                     });
