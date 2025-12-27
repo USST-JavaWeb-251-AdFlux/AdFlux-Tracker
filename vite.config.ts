@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
                         if (req.url && /\.[tj]s(\?.*)?$/.test(req.url)) {
                             try {
                                 const result = await server.transformRequest(
-                                    req.url.replace(/\.js(\?.*)?/, '.ts'),
+                                    req.url.replace(/\.js(\?.*?)?$/, '.ts$1'),
                                 );
                                 if (result) {
                                     res.setHeader('Content-Type', 'application/javascript');
