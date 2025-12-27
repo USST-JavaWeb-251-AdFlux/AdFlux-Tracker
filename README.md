@@ -2,6 +2,10 @@
 
 AdFlux 追踪系统，使用 Vite 构建。
 
+## 原型
+
+最小可用原型和讨论过程在 [prototype](https://github.com/USST-JavaWeb-251-AdFlux/AdFlux-Tracker/tree/prototype) 分支中。
+
 ## 开发
 
 安装依赖：
