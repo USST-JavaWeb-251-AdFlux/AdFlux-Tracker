@@ -1,13 +1,8 @@
 /* src/style.css */
-/* Styles injected to content page by main.ts */
+/* Styles for adflux-slot shadow root */
 
-iframe#adflux-tracker {
-    display: none;
-}
-
-adflux-slot {
+:host {
     opacity: 0;
-    transform: translateY(4px);
     background-color: #b2dfdb;
     border-radius: 12px;
     display: flex;
@@ -16,10 +11,30 @@ adflux-slot {
     align-items: center;
 }
 
-adflux-slot.is-loaded {
+:host(.is-loaded) {
     opacity: 1;
-    transform: translateY(0);
-    transition:
-        opacity 0.5s ease-out,
-        transform 0.5s ease-out;
+    transition: opacity 0.5s ease-out;
+}
+
+:host(.is-error)::after {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+    content: '[AdFlux] Ad Load Error';
+    background-color: #e0e0e0;
+    color: #616161;
+}
+
+:host(.is-error) img {
+    display: none;
+}
+
+img {
+    height: 100%;
+    width: 100%;
+    cursor: pointer;
 }

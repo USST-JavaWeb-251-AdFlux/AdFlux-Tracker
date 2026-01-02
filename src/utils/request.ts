@@ -1,6 +1,6 @@
 const isDev = import.meta.env.DEV;
 const rawApiHost = import.meta.env.VITE_API_HOST;
-const apiHost = isDev ? new URL(rawApiHost).pathname : rawApiHost;
+const apiHost = isDev ? import.meta.resolve(new URL(rawApiHost).pathname) : rawApiHost;
 
 type RequestOptions = Omit<RequestInit, 'headers' | 'body'> & {
     headers?: Record<string, string>;

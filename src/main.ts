@@ -4,33 +4,32 @@
 import h from 'hyperscript';
 import { getMeta } from '@/utils/tools';
 import style from '@/style.css?inline';
+import { AdLayout, AdType, getAdForSlotApi } from '@/apis';
 
 // Define AdFluxSlot Element
 class AdFluxSlot extends HTMLElement {
     connectedCallback() {
-        this.textContent = 'AD Content';
-        requestAnimationFrame(() => {
-            // TODO: Pre-load ad image then add is-loaded class
-            this.classList.add('is-loaded');
-        });
+        loadAdForSlot(this);
     }
 }
 
 // Upgrade AdFluxSlot Elements after Tracker is Ready
+let trackId: string | null = null;
 const trackerOrigin = new URL(import.meta.url).origin;
-const handleMessage = (event: MessageEvent) => {
-    if (event.origin !== trackerOrigin || event.data !== 'AdFlux-TrackerReady') {
+const handleMessage = (
+    event: MessageEvent<{
+        type: 'trackerReady';
+        trackId: string;
+    }>,
+) => {
+    if (event.origin !== trackerOrigin || event.data?.type !== 'trackerReady') {
         return;
     }
+    trackId = event.data.trackId;
     customElements.define('adflux-slot', AdFluxSlot);
     window.removeEventListener('message', handleMessage);
 };
 window.addEventListener('message', handleMessage);
-
-// Inject Style
-if (!document.getElementById('adflux-injected-style')) {
-    document.head.append(h<HTMLStyleElement>('style#adflux-injected-style', style));
-}
 
 // Inject Tracker Iframe
 if (document.getElementById('adflux-tracker')) {
@@ -73,3 +72,50 @@ observer.observe(document.head, {
 window.addEventListener('beforeunload', () => {
     observer.disconnect();
 });
+
+const loadAdForSlot = async (slot: AdFluxSlot) => {
+    // slot.textContent = 'AD Content';
+    await new Promise(requestAnimationFrame);
+    slot.attachShadow({ mode: 'open' });
+    const shadowRoot = slot.shadowRoot as ShadowRoot;
+    shadowRoot.append(h<HTMLStyleElement>('style', style));
+
+    let adResult: Awaited<ReturnType<typeof getAdForSlotApi>>;
+    try {
+        if (!trackId) {
+            throw new Error('Track ID is null');
+        }
+
+        const size = slot.getBoundingClientRect();
+        const adLayout = size.height > size.width ? AdLayout.sidebar.value : AdLayout.banner.value;
+
+        adResult = await getAdForSlotApi({
+            adType: AdType.image.value,
+            adLayout,
+            trackId,
+            domain: window.location.hostname,
+        });
+    } catch (e) {
+        console.error(e);
+        slot.classList.add('is-error');
+        return;
+    }
+
+    const { mediaUrl, title, landingPage } = adResult.data;
+    const image = h<HTMLImageElement>('img#ad', {
+        src: mediaUrl,
+        title: title,
+        alt: title,
+        onclick: () => {
+            // TODO: Set clicked API
+            console.log(`Ad ${title} clicked`);
+            window.open(landingPage, '_blank', 'noopener,noreferrer');
+        },
+        onerror: () => {
+            console.error(`Failed to load ad image from ${mediaUrl}`);
+            slot.classList.add('is-error');
+        },
+    });
+    shadowRoot.append(image);
+    slot.classList.add('is-loaded');
+};
