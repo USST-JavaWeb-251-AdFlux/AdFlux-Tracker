@@ -18,7 +18,7 @@ if (!domain || domain.trim() === '') {
 
 console.log(`Track ID: ${trackId}`);
 console.log(`Domain: ${domain}`);
-window.parent.postMessage('AdFlux-TrackerReady', origin);
+window.parent.postMessage({ type: 'trackerReady', trackId }, origin);
 
 let pageViewState: {
     startTime: number;
