@@ -72,6 +72,7 @@ const initPageView = async (categoryName: string | null) => {
             }
         } catch (e) {
             console.error('Failed to parse cached visitId', e);
+            sessionStorage.removeItem(cacheKey);
         }
     }
 
