@@ -20,13 +20,20 @@ console.log(`Track ID: ${trackId}`);
 console.log(`Domain: ${domain}`);
 window.parent.postMessage('AdFlux-TrackerReady', origin);
 
-let pageViewState = {
+let pageViewState: {
+    startTime: number;
+    visitId: string;
+    timerId: number;
+    category: string | null;
+} = {
     startTime: 0,
     visitId: '',
     timerId: 0,
+    category: null,
 };
 
 const initPageView = async (categoryName: string | null) => {
+    console.group('Init Page View');
     console.log(`Page category: ${categoryName || '[None]'}`);
 
     if (pageViewState.timerId !== 0) {
@@ -37,27 +44,80 @@ const initPageView = async (categoryName: string | null) => {
             startTime: 0,
             visitId: '',
             timerId: 0,
+            category: null,
         };
         console.log('Cleared previous page view');
     }
 
-    if (!categoryName) return;
+    if (!categoryName) {
+        console.groupEnd();
+        return;
+    }
 
-    const result = await initPageViewApi({ domain, categoryName, trackId });
+    const cacheKey = `adflux_visit_${categoryName}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+        try {
+            const { visitId, lastUpdateTime, duration } = JSON.parse(cached);
+            if (Date.now() - lastUpdateTime < 5 * 60 * 1000) {
+                pageViewState = {
+                    startTime: Date.now() - duration * 1000,
+                    visitId,
+                    timerId: setInterval(updatePageView, 5000),
+                    category: categoryName,
+                };
+                console.log('Resumed page view from cache', pageViewState);
+                console.groupEnd();
+                return;
+            }
+        } catch (e) {
+            console.error('Failed to parse cached visitId', e);
+        }
+    }
+
+    let result: Awaited<ReturnType<typeof initPageViewApi>>;
+    try {
+        result = await initPageViewApi({ domain, categoryName, trackId });
+    } catch (e) {
+        console.error('Failed to initialize page view', e);
+        console.groupEnd();
+        return;
+    }
     pageViewState = {
         startTime: Date.now(),
         visitId: result.data.visitId,
         timerId: setInterval(updatePageView, 5000),
+        category: categoryName,
     };
-    console.log('Initialized page view');
+    console.log('Initialized page view', pageViewState);
+    console.groupEnd();
 };
 
 const updatePageView = async () => {
-    if (pageViewState.startTime === 0) return;
+    if (pageViewState.startTime === 0 || !pageViewState.category) return;
+    console.group('Update Page View');
 
     const duration = (Date.now() - pageViewState.startTime) / 1000;
-    await updatePageViewApi({ visitId: pageViewState.visitId, duration });
+    try {
+        await updatePageViewApi({ visitId: pageViewState.visitId, duration });
+    } catch (e) {
+        console.error('Failed to update page view', e);
+        console.groupEnd();
+        return;
+    }
+
+    const cacheKey = `adflux_visit_${pageViewState.category}`;
+    sessionStorage.setItem(
+        cacheKey,
+        JSON.stringify({
+            visitId: pageViewState.visitId,
+            lastUpdateTime: Date.now(),
+            duration,
+        }),
+    );
+
     console.log(`Updated page view, duration: ${duration}s`);
+    console.groupEnd();
 };
 
 initPageView(params.get('category'));
@@ -72,7 +132,10 @@ self.addEventListener(
     ) => {
         if (event.origin !== origin) return;
 
-        if (event.data.type === 'updateCategory') {
+        if (
+            event.data.type === 'updateCategory' &&
+            event.data.categoryName !== pageViewState.category
+        ) {
             await initPageView(event.data.categoryName);
         }
     },
