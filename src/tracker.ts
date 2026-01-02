@@ -1,8 +1,8 @@
 // src/tracker.ts
 // Tracker script, imported by tracker.html
 
-import { initPageViewApi, updatePageViewApi } from './apis';
-import { getTrackId } from './utils';
+import { initPageViewApi, updatePageViewApi } from '@/apis';
+import { getTrackId } from '@/utils/tools';
 
 const params = new URLSearchParams(window.location.search);
 

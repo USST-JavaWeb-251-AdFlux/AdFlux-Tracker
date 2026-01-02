@@ -1,4 +1,4 @@
-import { request, type ApiResponse } from './request';
+import { request, type ApiResponse } from '@/utils/request';
 
 export const initPageViewApi = (body: {
     domain: string;
