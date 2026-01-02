@@ -2,8 +2,8 @@
 // Import entry for content sites
 
 import h from 'hyperscript';
-import { getMeta } from './utils';
-import style from './style.css?inline';
+import { getMeta } from '@/utils/tools';
+import style from '@/style.css?inline';
 
 // Define AdFluxSlot Element
 class AdFluxSlot extends HTMLElement {

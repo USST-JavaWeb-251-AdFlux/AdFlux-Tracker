@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'url';
 import { defineConfig, loadEnv, UserConfig } from 'vite';
 import minifyHtml from 'vite-plugin-html-minifier';
 import removeConsole from 'vite-plugin-remove-console';
@@ -8,6 +9,11 @@ export default defineConfig(({ mode }) => {
     const config: UserConfig = {
         root: 'src',
         base: './',
+        resolve: {
+            alias: {
+                '@': fileURLToPath(new URL('./src', import.meta.url)),
+            },
+        },
         plugins: [
             minifyHtml(),
             mode === 'production' ? removeConsole() : null,
