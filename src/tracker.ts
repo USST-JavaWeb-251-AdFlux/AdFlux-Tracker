@@ -69,6 +69,8 @@ const initPageView = async (categoryName: string | null) => {
                 console.log('Resumed page view from cache', pageViewState);
                 console.groupEnd();
                 return;
+            } else {
+                sessionStorage.removeItem(cacheKey);
             }
         } catch (e) {
             console.error('Failed to parse cached visitId', e);
