@@ -20,7 +20,22 @@ export default defineConfig(({ mode }) => {
                             res.end('[Dev]');
                             return;
                         }
-                        if (req.url && /\.[tj]s(\?.*)?$/.test(req.url)) {
+                        next();
+                    });
+                },
+                generateBundle() {
+                    this.emitFile({
+                        type: 'asset',
+                        fileName: 'version.txt',
+                        source: env.VITE_APP_VERSION ?? '[Unknown]',
+                    });
+                },
+            },
+            {
+                name: 'ts-extension',
+                configureServer(server) {
+                    server.middlewares.use(async (req, res, next) => {
+                        if (req.url && /^(?!\/@fs\/).+\.[tj]s(\?.*)?$/.test(req.url)) {
                             try {
                                 const result = await server.transformRequest(
                                     req.url.replace(/\.js(\?.*?)?$/, '.ts$1'),
@@ -40,13 +55,6 @@ export default defineConfig(({ mode }) => {
                             }
                         }
                         next();
-                    });
-                },
-                generateBundle() {
-                    this.emitFile({
-                        type: 'asset',
-                        fileName: 'version.txt',
-                        source: env.VITE_APP_VERSION ?? '[Unknown]',
                     });
                 },
             },
