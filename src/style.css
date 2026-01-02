@@ -9,11 +9,12 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    transition: opacity 0.5s ease-out;
 }
 
-:host(.is-loaded) {
+:host(.is-loaded),
+:host(.is-error) {
     opacity: 1;
-    transition: opacity 0.5s ease-out;
 }
 
 :host(.is-error)::after {

@@ -115,7 +115,9 @@ const loadAdForSlot = async (slot: AdFluxSlot) => {
             console.error(`Failed to load ad image from ${mediaUrl}`);
             slot.classList.add('is-error');
         },
+        onload: () => {
+            slot.classList.add('is-loaded');
+        },
     });
     shadowRoot.append(image);
-    slot.classList.add('is-loaded');
 };
