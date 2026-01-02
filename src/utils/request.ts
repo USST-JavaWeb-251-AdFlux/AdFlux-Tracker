@@ -51,3 +51,7 @@ export async function request<T extends ApiResponse>(
 
     return result;
 }
+
+export const getBackendFullPath = (path: string) => {
+    return path ? `${apiHost}${path}` : '';
+};

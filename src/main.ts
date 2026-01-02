@@ -5,6 +5,7 @@ import h from 'hyperscript';
 import { getMeta } from '@/utils/tools';
 import style from '@/style.css?inline';
 import { AdLayout, AdType, getAdForSlotApi } from '@/apis';
+import { getBackendFullPath } from '@/utils/request';
 
 // Define AdFluxSlot Element
 class AdFluxSlot extends HTMLElement {
@@ -103,7 +104,7 @@ const loadAdForSlot = async (slot: AdFluxSlot) => {
 
     const { mediaUrl, title, landingPage } = adResult.data;
     const image = h<HTMLImageElement>('img#ad', {
-        src: mediaUrl,
+        src: getBackendFullPath(mediaUrl),
         title: title,
         alt: title,
         onclick: () => {
