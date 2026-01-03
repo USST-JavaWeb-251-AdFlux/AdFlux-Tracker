@@ -26,18 +26,19 @@ class AdFluxSlot extends HTMLElement {
     #isIntersecting: boolean = false;
     #durationDisplay: HTMLElement | null = null;
     #lastApiUpdateTime: number = 0;
+    #handleVisibilityChange = this.#updateTimer.bind(this);
 
     connectedCallback() {
         this.#fetchAd();
         this.#initIntersectionObserver();
-        document.addEventListener('visibilitychange', this.#updateTimer);
+        document.addEventListener('visibilitychange', this.#handleVisibilityChange);
     }
 
     disconnectedCallback() {
         this.#isIntersecting = false;
         this.#updateTimer();
         this.#observer?.disconnect();
-        document.removeEventListener('visibilitychange', this.#updateTimer);
+        document.removeEventListener('visibilitychange', this.#handleVisibilityChange);
     }
 
     #updateTimer() {
