@@ -58,7 +58,7 @@ class AdFluxSlot extends HTMLElement {
                 this.#isIntersecting = entries[0].isIntersecting;
                 this.#updateTimer();
             },
-            { threshold: 0.75 },
+            { threshold: 0.5 },
         );
         this.#observer.observe(this);
     }
