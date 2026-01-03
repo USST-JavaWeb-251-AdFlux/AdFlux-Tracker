@@ -1,5 +1,5 @@
-import { request, type ApiResponse } from '@/utils/request';
 import { createEnum, type ValueOf } from '@/utils/enum';
+import { request, type ApiResponse } from '@/utils/request';
 
 export const initPageViewApi = (body: {
     domain: string;
@@ -34,22 +34,37 @@ export const AdLayout = createEnum({
     sidebar: { value: 2, label: '侧栏' },
 } as const);
 
+export type AdResult = {
+    adLayout: ValueOf<typeof AdLayout>;
+    displayId: string;
+    landingPage: string;
+    mediaUrl: string;
+    title: string;
+};
+
 export const getAdForSlotApi = (body: {
     adLayout: ValueOf<typeof AdLayout>;
     adType: ValueOf<typeof AdType>;
     domain: string;
     trackId: string;
 }) => {
-    return request<
-        ApiResponse<{
-            adLayout: ValueOf<typeof AdLayout>;
-            displayId: string;
-            landingPage: string;
-            mediaUrl: string;
-            title: string;
-        }>
-    >('/track/ad-slot', {
+    return request<ApiResponse<AdResult>>('/track/ad-slot', {
         method: 'POST',
+        body,
+    });
+};
+
+export const AdClicked = createEnum({
+    notClicked: { value: 0, label: '未点击' },
+    clicked: { value: 1, label: '点击' },
+} as const);
+
+export const updateAdDisplayApi = (
+    displayId: string,
+    body: { duration: number; clicked: ValueOf<typeof AdClicked> },
+) => {
+    return request<ApiResponse<boolean>>(`/track/ad-slot/${displayId}`, {
+        method: 'PUT',
         body,
     });
 };
