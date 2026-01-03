@@ -21,30 +21,64 @@ console.log(`Domain: ${domain}`);
 window.parent.postMessage({ type: 'trackerReady', trackId }, origin);
 
 let pageViewState: {
-    startTime: number;
     visitId: string;
     timerId: number;
     category: string | null;
+    accumulatedDuration: number;
+    lastResumeTime: number;
 } = {
-    startTime: 0,
     visitId: '',
     timerId: 0,
     category: null,
+    accumulatedDuration: 0,
+    lastResumeTime: 0,
+};
+
+const getCurrentDuration = () => {
+    const currentSession =
+        pageViewState.lastResumeTime > 0 ? Date.now() - pageViewState.lastResumeTime : 0;
+    return (pageViewState.accumulatedDuration + currentSession) / 1000;
+};
+
+const startTimer = () => {
+    if (
+        pageViewState.timerId !== 0 ||
+        !pageViewState.visitId ||
+        document.visibilityState !== 'visible'
+    ) {
+        return;
+    }
+    pageViewState.lastResumeTime = Date.now();
+    pageViewState.timerId = setInterval(updatePageView, 5000);
+    console.log('Timer started');
+};
+
+const stopTimer = () => {
+    if (pageViewState.timerId !== 0) {
+        clearInterval(pageViewState.timerId);
+        pageViewState.timerId = 0;
+    }
+    if (pageViewState.lastResumeTime > 0) {
+        pageViewState.accumulatedDuration += Date.now() - pageViewState.lastResumeTime;
+        pageViewState.lastResumeTime = 0;
+    }
+    console.log('Timer stopped');
 };
 
 const initPageView = async (categoryName: string | null) => {
     console.group('Init Page View');
     console.log(`Page category: ${categoryName || '[None]'}`);
 
-    if (pageViewState.timerId !== 0) {
+    if (pageViewState.visitId !== '') {
         await updatePageView();
-        clearInterval(pageViewState.timerId);
+        stopTimer();
 
         pageViewState = {
-            startTime: 0,
             visitId: '',
             timerId: 0,
             category: null,
+            accumulatedDuration: 0,
+            lastResumeTime: 0,
         };
         console.log('Cleared previous page view');
     }
@@ -61,11 +95,13 @@ const initPageView = async (categoryName: string | null) => {
             const { visitId, lastUpdateTime, duration } = JSON.parse(cached);
             if (Date.now() - lastUpdateTime < 5 * 60 * 1000) {
                 pageViewState = {
-                    startTime: Date.now() - duration * 1000,
                     visitId,
-                    timerId: setInterval(updatePageView, 5000),
+                    timerId: 0,
                     category: categoryName,
+                    accumulatedDuration: duration * 1000,
+                    lastResumeTime: 0,
                 };
+                startTimer();
                 console.log('Resumed page view from cache', pageViewState);
                 console.groupEnd();
                 return;
@@ -87,20 +123,22 @@ const initPageView = async (categoryName: string | null) => {
         return;
     }
     pageViewState = {
-        startTime: Date.now(),
         visitId: result.data.visitId,
-        timerId: setInterval(updatePageView, 5000),
+        timerId: 0,
         category: categoryName,
+        accumulatedDuration: 0,
+        lastResumeTime: 0,
     };
+    startTimer();
     console.log('Initialized page view', pageViewState);
     console.groupEnd();
 };
 
 const updatePageView = async () => {
-    if (pageViewState.startTime === 0 || !pageViewState.category) return;
+    if (pageViewState.visitId === '' || !pageViewState.category) return;
     console.group('Update Page View');
 
-    const duration = (Date.now() - pageViewState.startTime) / 1000;
+    const duration = getCurrentDuration();
     try {
         await updatePageViewApi({ visitId: pageViewState.visitId, duration });
     } catch (e) {
@@ -122,6 +160,16 @@ const updatePageView = async () => {
     console.log(`Updated page view, duration: ${duration}s`);
     console.groupEnd();
 };
+
+document.addEventListener('visibilitychange', () => {
+    console.log(`Document visibility changed: ${document.visibilityState}`);
+    if (document.visibilityState === 'visible') {
+        startTimer();
+    } else {
+        stopTimer();
+        updatePageView();
+    }
+});
 
 initPageView(params.get('category'));
 
