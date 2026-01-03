@@ -106,7 +106,7 @@ class AdFluxSlot extends HTMLElement {
             onclick: () => {
                 this.#clicked = AdClicked.clicked.value;
                 console.log(`Ad ${title} clicked`);
-                this.#updateAdStatus();
+                this.#updateAdStatus(true);
                 window.open(landingPage, '_blank', 'noopener,noreferrer');
             },
             onerror: () => {
@@ -121,7 +121,7 @@ class AdFluxSlot extends HTMLElement {
         this.shadowRoot?.append(image);
     }
 
-    async #updateAdStatus() {
+    async #updateAdStatus(immediate: boolean = false) {
         if (!this.#adResult) {
             return;
         }
@@ -132,7 +132,7 @@ class AdFluxSlot extends HTMLElement {
         }
 
         const now = Date.now();
-        if (this.#timer.isActive() && now - this.#lastApiUpdateTime < 5000) {
+        if (!immediate && this.#timer.isActive() && now - this.#lastApiUpdateTime < 5000) {
             return;
         }
         this.#lastApiUpdateTime = now;
