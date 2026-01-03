@@ -21,9 +21,11 @@ class AdFluxSlot extends HTMLElement {
     #adResult: AdResult | null = null;
     #clicked: ValueOf<typeof AdClicked> = AdClicked.notClicked.value;
 
-    #timer = new Timer(() => this.#updateAdStatus());
+    #timer = new Timer(() => this.#updateAdStatus(), import.meta.env.DEV ? 500 : 5000);
     #observer: IntersectionObserver | null = null;
     #isIntersecting: boolean = false;
+    #durationDisplay: HTMLElement | null = null;
+    #lastApiUpdateTime: number = 0;
 
     connectedCallback() {
         this.#fetchAd();
@@ -55,7 +57,7 @@ class AdFluxSlot extends HTMLElement {
                 this.#isIntersecting = entries[0].isIntersecting;
                 this.#updateTimer();
             },
-            { threshold: 1.0 },
+            { threshold: 0.75 },
         );
         this.#observer.observe(this);
     }
@@ -65,6 +67,11 @@ class AdFluxSlot extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         const shadowRoot = this.shadowRoot as ShadowRoot;
         shadowRoot.append(h<HTMLStyleElement>('style', style));
+
+        if (import.meta.env.DEV) {
+            this.#durationDisplay = h<HTMLDivElement>('div.dev-duration', '0.0s');
+            shadowRoot.append(this.#durationDisplay);
+        }
 
         try {
             if (!trackId) {
@@ -118,8 +125,18 @@ class AdFluxSlot extends HTMLElement {
             return;
         }
 
+        const duration = this.#timer.getDuration();
+        if (this.#durationDisplay) {
+            this.#durationDisplay.textContent = `${duration.toFixed(1)}s`;
+        }
+
+        const now = Date.now();
+        if (this.#timer.isActive() && now - this.#lastApiUpdateTime < 5000) {
+            return;
+        }
+        this.#lastApiUpdateTime = now;
+
         try {
-            const duration = this.#timer.getDuration();
             await updateAdDisplayApi(this.#adResult.displayId, {
                 clicked: this.#clicked,
                 duration,
