@@ -13,19 +13,54 @@ import {
 import type { ValueOf } from '@/utils/enum';
 import { getBackendFullPath } from '@/utils/request';
 import { getMeta } from '@/utils/tools';
+import { Timer } from '@/utils/timer';
 import style from '@/style.css?inline';
 
 // Define AdFluxSlot Element
 class AdFluxSlot extends HTMLElement {
-    adResult: AdResult | null = null;
-    duration: number = 0;
-    clicked: ValueOf<typeof AdClicked> = AdClicked.notClicked.value;
+    #adResult: AdResult | null = null;
+    #clicked: ValueOf<typeof AdClicked> = AdClicked.notClicked.value;
+
+    #timer = new Timer(() => this.#updateAdStatus());
+    #observer: IntersectionObserver | null = null;
+    #isIntersecting: boolean = false;
 
     connectedCallback() {
-        this.loadAd();
+        this.#fetchAd();
+        this.#initIntersectionObserver();
+        document.addEventListener('visibilitychange', this.#updateTimer);
     }
 
-    async loadAd() {
+    disconnectedCallback() {
+        this.#isIntersecting = false;
+        this.#updateTimer();
+        this.#observer?.disconnect();
+        document.removeEventListener('visibilitychange', this.#updateTimer);
+    }
+
+    #updateTimer() {
+        if (this.#isIntersecting && document.visibilityState === 'visible' && this.#adResult) {
+            this.#timer.start();
+        } else {
+            if (this.#timer.isActive()) {
+                this.#timer.stop();
+                this.#updateAdStatus();
+            }
+        }
+    }
+
+    #initIntersectionObserver() {
+        this.#observer = new IntersectionObserver(
+            (entries) => {
+                this.#isIntersecting = entries[0].isIntersecting;
+                this.#updateTimer();
+            },
+            { threshold: 1.0 },
+        );
+        this.#observer.observe(this);
+    }
+
+    async #fetchAd() {
         await new Promise(requestAnimationFrame);
         this.attachShadow({ mode: 'open' });
         const shadowRoot = this.shadowRoot as ShadowRoot;
@@ -45,22 +80,25 @@ class AdFluxSlot extends HTMLElement {
                 trackId,
                 domain: window.location.hostname,
             });
-            this.adResult = result.data;
+            this.#adResult = result.data;
+            this.#renderImage(this.#adResult);
         } catch (e) {
             console.error(e);
             this.classList.add('is-error');
             return;
         }
+    }
 
-        const { mediaUrl, title, landingPage } = this.adResult;
+    #renderImage(adResult: AdResult) {
+        const { mediaUrl, title, landingPage } = adResult;
         const image = h<HTMLImageElement>('img#ad', {
             src: getBackendFullPath(mediaUrl),
             title: title,
             alt: title,
             onclick: () => {
-                this.clicked = AdClicked.clicked.value;
+                this.#clicked = AdClicked.clicked.value;
                 console.log(`Ad ${title} clicked`);
-                this.updateAdDisplay();
+                this.#updateAdStatus();
                 window.open(landingPage, '_blank', 'noopener,noreferrer');
             },
             onerror: () => {
@@ -69,20 +107,23 @@ class AdFluxSlot extends HTMLElement {
             },
             onload: () => {
                 this.classList.add('is-loaded');
+                this.#updateTimer();
             },
         });
-        shadowRoot.append(image);
+        this.shadowRoot?.append(image);
     }
 
-    async updateAdDisplay() {
-        if (!this.adResult) {
-            console.error('AdResult is null, cannot update ad display');
+    async #updateAdStatus() {
+        if (!this.#adResult) {
             return;
         }
 
         try {
-            const { clicked, duration } = this;
-            await updateAdDisplayApi(this.adResult.displayId, { clicked, duration });
+            const duration = this.#timer.getDuration();
+            await updateAdDisplayApi(this.#adResult.displayId, {
+                clicked: this.#clicked,
+                duration,
+            });
         } catch (e) {
             console.error(e);
         }
