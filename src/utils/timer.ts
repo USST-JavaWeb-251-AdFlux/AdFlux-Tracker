@@ -36,7 +36,7 @@ export class Timer {
 
     setDuration(seconds: number) {
         this.#accumulatedDuration = seconds * 1000;
-        this.#lastResumeTime = 0;
+        this.#lastResumeTime = this.isActive() ? Date.now() : 0;
     }
 
     isActive() {
