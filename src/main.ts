@@ -2,15 +2,90 @@
 // Import entry for content sites
 
 import h from 'hyperscript';
+import {
+    AdClicked,
+    AdLayout,
+    AdType,
+    getAdForSlotApi,
+    updateAdDisplayApi,
+    type AdResult,
+} from '@/apis';
+import type { ValueOf } from '@/utils/enum';
+import { getBackendFullPath } from '@/utils/request';
 import { getMeta } from '@/utils/tools';
 import style from '@/style.css?inline';
-import { AdLayout, AdType, getAdForSlotApi } from '@/apis';
-import { getBackendFullPath } from '@/utils/request';
 
 // Define AdFluxSlot Element
 class AdFluxSlot extends HTMLElement {
+    adResult: AdResult | null = null;
+    duration: number = 0;
+    clicked: ValueOf<typeof AdClicked> = AdClicked.notClicked.value;
+
     connectedCallback() {
-        loadAdForSlot(this);
+        this.loadAd();
+    }
+
+    async loadAd() {
+        await new Promise(requestAnimationFrame);
+        this.attachShadow({ mode: 'open' });
+        const shadowRoot = this.shadowRoot as ShadowRoot;
+        shadowRoot.append(h<HTMLStyleElement>('style', style));
+
+        try {
+            if (!trackId) {
+                throw new Error('Track ID is null');
+            }
+
+            const size = this.getBoundingClientRect();
+            const adLayout = AdLayout[size.height > size.width ? 'sidebar' : 'banner'].value;
+
+            const result = await getAdForSlotApi({
+                adType: AdType.image.value,
+                adLayout,
+                trackId,
+                domain: window.location.hostname,
+            });
+            this.adResult = result.data;
+        } catch (e) {
+            console.error(e);
+            this.classList.add('is-error');
+            return;
+        }
+
+        const { mediaUrl, title, landingPage } = this.adResult;
+        const image = h<HTMLImageElement>('img#ad', {
+            src: getBackendFullPath(mediaUrl),
+            title: title,
+            alt: title,
+            onclick: () => {
+                this.clicked = AdClicked.clicked.value;
+                console.log(`Ad ${title} clicked`);
+                this.updateAdDisplay();
+                window.open(landingPage, '_blank', 'noopener,noreferrer');
+            },
+            onerror: () => {
+                console.error(`Failed to load ad image from ${mediaUrl}`);
+                this.classList.add('is-error');
+            },
+            onload: () => {
+                this.classList.add('is-loaded');
+            },
+        });
+        shadowRoot.append(image);
+    }
+
+    async updateAdDisplay() {
+        if (!this.adResult) {
+            console.error('AdResult is null, cannot update ad display');
+            return;
+        }
+
+        try {
+            const { clicked, duration } = this;
+            await updateAdDisplayApi(this.adResult.displayId, { clicked, duration });
+        } catch (e) {
+            console.error(e);
+        }
     }
 }
 
@@ -73,52 +148,3 @@ observer.observe(document.head, {
 window.addEventListener('beforeunload', () => {
     observer.disconnect();
 });
-
-const loadAdForSlot = async (slot: AdFluxSlot) => {
-    // slot.textContent = 'AD Content';
-    await new Promise(requestAnimationFrame);
-    slot.attachShadow({ mode: 'open' });
-    const shadowRoot = slot.shadowRoot as ShadowRoot;
-    shadowRoot.append(h<HTMLStyleElement>('style', style));
-
-    let adResult: Awaited<ReturnType<typeof getAdForSlotApi>>;
-    try {
-        if (!trackId) {
-            throw new Error('Track ID is null');
-        }
-
-        const size = slot.getBoundingClientRect();
-        const adLayout = size.height > size.width ? AdLayout.sidebar.value : AdLayout.banner.value;
-
-        adResult = await getAdForSlotApi({
-            adType: AdType.image.value,
-            adLayout,
-            trackId,
-            domain: window.location.hostname,
-        });
-    } catch (e) {
-        console.error(e);
-        slot.classList.add('is-error');
-        return;
-    }
-
-    const { mediaUrl, title, landingPage } = adResult.data;
-    const image = h<HTMLImageElement>('img#ad', {
-        src: getBackendFullPath(mediaUrl),
-        title: title,
-        alt: title,
-        onclick: () => {
-            // TODO: Set clicked API
-            console.log(`Ad ${title} clicked`);
-            window.open(landingPage, '_blank', 'noopener,noreferrer');
-        },
-        onerror: () => {
-            console.error(`Failed to load ad image from ${mediaUrl}`);
-            slot.classList.add('is-error');
-        },
-        onload: () => {
-            slot.classList.add('is-loaded');
-        },
-    });
-    shadowRoot.append(image);
-};
