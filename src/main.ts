@@ -192,14 +192,19 @@ class AdFluxVideo extends AdFluxBase {
             onplay: () => {
                 this.timer.start();
             },
+            onpause: () => {
+                this.timer.stop();
+                this.updateAdStatus(true);
+            },
             onended: () => {
                 this.timer.stop();
                 this.updateAdStatus(true);
-                this.dispatchEvent(new CustomEvent('ad-finished', { detail: { adResult } }));
+                this.dispatchEvent(new CustomEvent('ad-finished'));
             },
             onerror: () => {
                 console.error(`Failed to load ad video from ${mediaUrl}`);
                 this.classList.add('is-error');
+                this.dispatchEvent(new CustomEvent('ad-error'));
             },
             onloadeddata: () => {
                 this.classList.add('is-loaded');
