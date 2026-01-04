@@ -22,11 +22,19 @@
                 justify-content: center;
                 align-items: center;
             }
+            .action {
+                cursor: pointer;
+            }
+            .action:hover {
+                text-decoration: underline;
+            }
         </style>
     </head>
     <body>
         <h1>Check console log for details!</h1>
-        <adflux-slot style="height: 80px; width: 320px"></adflux-slot>
+        <adflux-slot style="width: 320px"></adflux-slot>
+        <adflux-video style="height: 180px; width: 320px"></adflux-video>
+        <div class="action" onclick="playVideo()">Play</div>
         <script type="module" src="./main.ts" defer></script>
         <script>
             const display = (element) => {
@@ -36,7 +44,12 @@
             };
             display(document.querySelector('meta[name="adflux-page-category"]'));
             display(document.querySelector('adflux-slot'));
+            display(document.querySelector('adflux-video'));
             display(document.body.querySelector('script[type="module"]'));
+
+            const video = document.querySelector('adflux-video');
+            const playVideo = () => video.play();
+            video.addEventListener('ad-finished', () => alert('Video Ad Finished'));
         </script>
     </body>
 </html>

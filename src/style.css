@@ -10,6 +10,9 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+:host(.is-initialized) {
     transition: opacity 0.5s ease-out;
 }
 
@@ -31,11 +34,13 @@
     color: #616161;
 }
 
-:host(.is-error) img {
+:host(.is-error) img,
+:host(.is-error) video {
     display: none;
 }
 
-img {
+img,
+video {
     height: 100%;
     width: 100%;
     cursor: pointer;
