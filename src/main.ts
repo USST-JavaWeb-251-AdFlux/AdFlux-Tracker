@@ -213,8 +213,14 @@ class AdFluxVideo extends AdFluxBase {
         this.shadowRoot?.append(this.#video);
     }
 
-    play() {
-        this.#video?.play();
+    async play() {
+        try {
+            await this.#video?.play();
+        } catch (e) {
+            console.error('Failed to play video ad', e);
+            this.classList.add('is-error');
+            this.dispatchEvent(new CustomEvent('ad-error'));
+        }
     }
 }
 
