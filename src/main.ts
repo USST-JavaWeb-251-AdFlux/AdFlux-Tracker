@@ -16,25 +16,106 @@ import { getMeta } from '@/utils/tools';
 import { Timer } from '@/utils/timer';
 import style from '@/style.css?inline';
 
-// Define AdFluxSlot Element
-class AdFluxSlot extends HTMLElement {
-    #adResult: AdResult | null = null;
-    #clicked: ValueOf<typeof AdClicked> = AdClicked.notClicked.value;
+// Define AdFluxBase Element
+abstract class AdFluxBase extends HTMLElement {
+    protected adResult: AdResult | null = null;
+    protected clicked: ValueOf<typeof AdClicked> = AdClicked.notClicked.value;
 
-    #timer = new Timer(() => this.#updateAdStatus(), import.meta.env.DEV ? 500 : 5000);
+    protected timer = new Timer(() => this.updateAdStatus(), import.meta.env.DEV ? 500 : 5000);
+    protected durationDisplay: HTMLElement | null = null;
+    protected lastApiUpdateTime: number = 0;
+
+    protected abstract render(adResult: AdResult): void;
+
+    protected getDuration(): number {
+        return this.timer.getDuration();
+    }
+
+    connectedCallback() {}
+
+    disconnectedCallback() {
+        this.timer.stop();
+    }
+
+    protected async fetchAd(adType: ValueOf<typeof AdType>, adLayout?: ValueOf<typeof AdLayout>) {
+        this.attachShadow({ mode: 'open' });
+        const shadowRoot = this.shadowRoot as ShadowRoot;
+        shadowRoot.append(h<HTMLStyleElement>('style', style));
+        await new Promise(requestAnimationFrame);
+        await new Promise(requestAnimationFrame);
+        this.classList.add('is-initialized');
+
+        if (import.meta.env.DEV) {
+            this.durationDisplay = h<HTMLDivElement>('div.dev-duration', '0.0s');
+            shadowRoot.append(this.durationDisplay);
+        }
+
+        try {
+            if (!trackId) {
+                throw new Error('Track ID is null');
+            }
+
+            const size = this.getBoundingClientRect();
+            const layout =
+                adLayout ?? AdLayout[size.height > size.width ? 'sidebar' : 'banner'].value;
+
+            const result = await getAdForSlotApi({
+                adType,
+                adLayout: layout,
+                trackId,
+                domain: window.location.hostname,
+            });
+            this.adResult = result.data;
+            this.render(this.adResult);
+        } catch (e) {
+            console.error(e);
+            this.classList.add('is-error');
+            return;
+        }
+    }
+
+    protected async updateAdStatus(immediate: boolean = false) {
+        if (!this.adResult) {
+            return;
+        }
+
+        const duration = this.getDuration();
+        if (this.durationDisplay) {
+            this.durationDisplay.textContent = `${duration.toFixed(1)}s`;
+        }
+
+        const now = Date.now();
+        if (!immediate && this.timer.isActive() && now - this.lastApiUpdateTime < 5000) {
+            return;
+        }
+        this.lastApiUpdateTime = now;
+
+        try {
+            await updateAdDisplayApi(this.adResult.displayId, {
+                clicked: this.clicked,
+                duration,
+            });
+        } catch (e) {
+            console.error(e);
+        }
+    }
+}
+
+// Define AdFluxSlot Element (Image)
+class AdFluxSlot extends AdFluxBase {
     #observer: IntersectionObserver | null = null;
     #isIntersecting: boolean = false;
-    #durationDisplay: HTMLElement | null = null;
-    #lastApiUpdateTime: number = 0;
     #handleVisibilityChange = this.#updateTimer.bind(this);
 
     connectedCallback() {
-        this.#fetchAd();
+        super.connectedCallback();
+        this.fetchAd(AdType.image.value);
         this.#initIntersectionObserver();
         document.addEventListener('visibilitychange', this.#handleVisibilityChange);
     }
 
     disconnectedCallback() {
+        super.disconnectedCallback();
         this.#isIntersecting = false;
         this.#updateTimer();
         this.#observer?.disconnect();
@@ -42,12 +123,12 @@ class AdFluxSlot extends HTMLElement {
     }
 
     #updateTimer() {
-        if (this.#isIntersecting && document.visibilityState === 'visible' && this.#adResult) {
-            this.#timer.start();
+        if (this.#isIntersecting && document.visibilityState === 'visible' && this.adResult) {
+            this.timer.start();
         } else {
-            if (this.#timer.isActive()) {
-                this.#timer.stop();
-                this.#updateAdStatus();
+            if (this.timer.isActive()) {
+                this.timer.stop();
+                this.updateAdStatus();
             }
         }
     }
@@ -63,50 +144,16 @@ class AdFluxSlot extends HTMLElement {
         this.#observer.observe(this);
     }
 
-    async #fetchAd() {
-        await new Promise(requestAnimationFrame);
-        this.attachShadow({ mode: 'open' });
-        const shadowRoot = this.shadowRoot as ShadowRoot;
-        shadowRoot.append(h<HTMLStyleElement>('style', style));
-
-        if (import.meta.env.DEV) {
-            this.#durationDisplay = h<HTMLDivElement>('div.dev-duration', '0.0s');
-            shadowRoot.append(this.#durationDisplay);
-        }
-
-        try {
-            if (!trackId) {
-                throw new Error('Track ID is null');
-            }
-
-            const size = this.getBoundingClientRect();
-            const adLayout = AdLayout[size.height > size.width ? 'sidebar' : 'banner'].value;
-
-            const result = await getAdForSlotApi({
-                adType: AdType.image.value,
-                adLayout,
-                trackId,
-                domain: window.location.hostname,
-            });
-            this.#adResult = result.data;
-            this.#renderImage(this.#adResult);
-        } catch (e) {
-            console.error(e);
-            this.classList.add('is-error');
-            return;
-        }
-    }
-
-    #renderImage(adResult: AdResult) {
+    protected render(adResult: AdResult) {
         const { mediaUrl, title, landingPage } = adResult;
         const image = h<HTMLImageElement>('img#ad', {
             src: getBackendFullPath(mediaUrl),
             title: title,
             alt: title,
             onclick: () => {
-                this.#clicked = AdClicked.clicked.value;
+                this.clicked = AdClicked.clicked.value;
                 console.log(`Ad ${title} clicked`);
-                this.#updateAdStatus(true);
+                this.updateAdStatus(true);
                 window.open(landingPage, '_blank', 'noopener,noreferrer');
             },
             onerror: () => {
@@ -120,31 +167,49 @@ class AdFluxSlot extends HTMLElement {
         });
         this.shadowRoot?.append(image);
     }
+}
 
-    async #updateAdStatus(immediate: boolean = false) {
-        if (!this.#adResult) {
-            return;
-        }
+// Define AdFluxVideo Element
+class AdFluxVideo extends AdFluxBase {
+    #video: HTMLVideoElement | null = null;
 
-        const duration = this.#timer.getDuration();
-        if (this.#durationDisplay) {
-            this.#durationDisplay.textContent = `${duration.toFixed(1)}s`;
-        }
+    connectedCallback() {
+        super.connectedCallback();
+        this.fetchAd(AdType.video.value, AdLayout.video.value);
+    }
 
-        const now = Date.now();
-        if (!immediate && this.#timer.isActive() && now - this.#lastApiUpdateTime < 5000) {
-            return;
-        }
-        this.#lastApiUpdateTime = now;
+    protected render(adResult: AdResult) {
+        const { mediaUrl, title, landingPage } = adResult;
+        this.#video = h<HTMLVideoElement>('video#ad', {
+            src: getBackendFullPath(mediaUrl),
+            title: title,
+            preload: 'auto',
+            onclick: () => {
+                this.clicked = AdClicked.clicked.value;
+                this.updateAdStatus(true);
+                window.open(landingPage, '_blank', 'noopener,noreferrer');
+            },
+            onplay: () => {
+                this.timer.start();
+            },
+            onended: () => {
+                this.timer.stop();
+                this.updateAdStatus(true);
+                this.dispatchEvent(new CustomEvent('ad-finished', { detail: { adResult } }));
+            },
+            onerror: () => {
+                console.error(`Failed to load ad video from ${mediaUrl}`);
+                this.classList.add('is-error');
+            },
+            onloadeddata: () => {
+                this.classList.add('is-loaded');
+            },
+        });
+        this.shadowRoot?.append(this.#video);
+    }
 
-        try {
-            await updateAdDisplayApi(this.#adResult.displayId, {
-                clicked: this.#clicked,
-                duration,
-            });
-        } catch (e) {
-            console.error(e);
-        }
+    play() {
+        this.#video?.play();
     }
 }
 
@@ -162,6 +227,7 @@ const handleMessage = (
     }
     trackId = event.data.trackId;
     customElements.define('adflux-slot', AdFluxSlot);
+    customElements.define('adflux-video', AdFluxVideo);
     window.removeEventListener('message', handleMessage);
 };
 window.addEventListener('message', handleMessage);
