@@ -37,7 +37,7 @@ abstract class AdFluxBase extends HTMLElement {
         this.timer.stop();
     }
 
-    protected async fetchAd(adType: ValueOf<typeof AdType>, adLayout?: ValueOf<typeof AdLayout>) {
+    protected async fetchAd(adType: ValueOf<typeof AdType>, adLayout: ValueOf<typeof AdLayout>) {
         this.attachShadow({ mode: 'open' });
         const shadowRoot = this.shadowRoot as ShadowRoot;
         shadowRoot.append(h<HTMLStyleElement>('style', style));
@@ -55,13 +55,9 @@ abstract class AdFluxBase extends HTMLElement {
                 throw new Error('Track ID is null');
             }
 
-            const size = this.getBoundingClientRect();
-            const layout =
-                adLayout ?? AdLayout[size.height > size.width ? 'sidebar' : 'banner'].value;
-
             const result = await getAdForSlotApi({
                 adType,
-                adLayout: layout,
+                adLayout,
                 trackId,
                 domain: window.location.hostname,
             });
@@ -109,7 +105,17 @@ class AdFluxSlot extends AdFluxBase {
 
     connectedCallback() {
         super.connectedCallback();
-        this.fetchAd(AdType.image.value);
+
+        let layout: 'sidebar' | 'banner';
+        const layoutAttr = this.getAttribute('layout');
+        if (layoutAttr === 'sidebar' || layoutAttr === 'banner') {
+            layout = layoutAttr;
+        } else {
+            const size = this.getBoundingClientRect();
+            layout = size.height > size.width ? 'sidebar' : 'banner';
+        }
+
+        this.fetchAd(AdType.image.value, AdLayout[layout].value);
         this.#initIntersectionObserver();
         document.addEventListener('visibilitychange', this.#handleVisibilityChange);
     }
