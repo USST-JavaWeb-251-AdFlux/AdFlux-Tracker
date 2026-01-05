@@ -51,6 +51,9 @@ export const getTrackId = () => {
 };
 
 export const saveTrackId = () => {
+    if (!trackId) {
+        trackId = getTrackId();
+    }
     cookies.set(trackIdKey, trackId);
 
     const savedId = cookies.get<string>(trackIdKey);
