@@ -12,7 +12,6 @@ import {
 } from '@/apis';
 import type { ValueOf } from '@/utils/enum';
 import { getBackendFullPath } from '@/utils/request';
-import { getMeta } from '@/utils/tools';
 import { Timer } from '@/utils/timer';
 import style from '@/style.css?inline';
 
@@ -239,13 +238,15 @@ const handleMessage = (
         trackId: string;
     }>,
 ) => {
-    if (event.origin !== trackerOrigin || event.data?.type !== 'trackerReady') {
+    if (event.origin !== trackerOrigin) {
         return;
     }
-    trackId = event.data.trackId;
-    customElements.define('adflux-slot', AdFluxSlot);
-    customElements.define('adflux-video', AdFluxVideo);
-    window.removeEventListener('message', handleMessage);
+    if (event.data?.type === 'trackerReady') {
+        if (trackId) return;
+        trackId = event.data.trackId;
+        customElements.define('adflux-slot', AdFluxSlot);
+        customElements.define('adflux-video', AdFluxVideo);
+    }
 };
 window.addEventListener('message', handleMessage);
 
@@ -253,6 +254,9 @@ window.addEventListener('message', handleMessage);
 if (document.getElementById('adflux-tracker')) {
     throw new Error('AdFlux tracker already exists');
 }
+
+const getMeta = (name: string) =>
+    document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`)?.content;
 
 let currentCategory = getMeta('adflux-page-category') ?? '';
 const trackerUrl = new URL(import.meta.resolve('./tracker.html'));
