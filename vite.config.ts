@@ -16,7 +16,11 @@ export default defineConfig(({ mode }) => {
         },
         plugins: [
             minifyHtml(),
-            mode === 'production' ? removeConsole() : null,
+            mode === 'production'
+                ? removeConsole({
+                      includes: ['log', 'debug', 'info', 'warn', 'error', 'group', 'groupEnd'],
+                  })
+                : null,
             {
                 name: 'version-file',
                 configureServer(server) {
