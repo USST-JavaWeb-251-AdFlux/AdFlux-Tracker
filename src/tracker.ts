@@ -2,14 +2,13 @@
 // Tracker script, imported by tracker.html
 
 import { initPageViewApi, updatePageViewApi } from '@/apis';
-import { getTrackId } from '@/utils/tools';
+import { getTrackId, requestAccess, saveTrackId } from '@/utils/cookie';
 import { Timer } from '@/utils/timer';
 
 const params = new URLSearchParams(window.location.search);
-
-const trackId = await getTrackId();
 const origin = params.get('origin');
 const domain = params.get('domain');
+
 if (!origin || origin.trim() === '' || origin === '*') {
     throw new Error('Invalid origin parameter');
 }
@@ -17,8 +16,12 @@ if (!domain || domain.trim() === '') {
     throw new Error('Invalid domain parameter');
 }
 
+await requestAccess();
+const trackId = getTrackId();
+saveTrackId();
 console.log(`Track ID: ${trackId}`);
 console.log(`Domain: ${domain}`);
+
 window.parent.postMessage({ type: 'trackerReady', trackId }, origin);
 
 let pageViewState: {
