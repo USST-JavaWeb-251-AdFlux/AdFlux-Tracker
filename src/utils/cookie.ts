@@ -12,16 +12,10 @@ export const requestAccess = async () => {
     }
 
     try {
-        let permission = await navigator.permissions.query({ name: 'storage-access' });
-        console.log('Storage access permission status:', permission);
-
         // Always request access
         await document.requestStorageAccess();
         accessState = await document.hasStorageAccess();
         console.log('Storage access request result:', accessState);
-
-        permission = await navigator.permissions.query({ name: 'storage-access' });
-        console.log('Updated storage access permission status:', permission);
     } catch (error) {
         console.error('Failed to request storage access:', error);
         accessState = false;
