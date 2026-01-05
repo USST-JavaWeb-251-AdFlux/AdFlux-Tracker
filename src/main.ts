@@ -15,6 +15,17 @@ import { getBackendFullPath } from '@/utils/request';
 import { Timer } from '@/utils/timer';
 import style from '@/style.css?inline';
 
+const appendUtmParams = (baseUrl: string): string => {
+    try {
+        const url = new URL(baseUrl);
+        url.searchParams.set('utm_source', 'adflux');
+        url.searchParams.set('utm_medium', 'cpc');
+        return url.toString();
+    } catch {
+        return baseUrl;
+    }
+};
+
 // Define AdFluxBase Element
 abstract class AdFluxBase extends HTMLElement {
     protected adResult: AdResult | null = null;
@@ -157,9 +168,8 @@ class AdFluxSlot extends AdFluxBase {
             alt: title,
             onclick: () => {
                 this.clicked = AdClicked.clicked.value;
-                console.log(`Ad ${title} clicked`);
                 this.updateAdStatus(true);
-                window.open(landingPage, '_blank', 'noopener,noreferrer');
+                window.open(appendUtmParams(landingPage), '_blank', 'noopener,noreferrer');
             },
             onerror: () => {
                 console.error(`Failed to load ad image from ${mediaUrl}`);
@@ -192,7 +202,7 @@ class AdFluxVideo extends AdFluxBase {
             onclick: () => {
                 this.clicked = AdClicked.clicked.value;
                 this.updateAdStatus(true);
-                window.open(landingPage, '_blank', 'noopener,noreferrer');
+                window.open(appendUtmParams(landingPage), '_blank', 'noopener,noreferrer');
             },
             onplay: () => {
                 this.timer.start();
