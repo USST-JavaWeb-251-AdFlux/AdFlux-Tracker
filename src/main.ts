@@ -1,7 +1,6 @@
 // src/main.ts
 // Import entry for content sites
 
-import h from 'hyperscript';
 import {
     AdClicked,
     AdLayout,
@@ -11,6 +10,7 @@ import {
     type AdResult,
 } from '@/apis';
 import type { ValueOf } from '@/utils/enum';
+import { h } from '@/utils/render';
 import { getBackendFullPath } from '@/utils/request';
 import { Timer } from '@/utils/timer';
 import style from '@/style.css?inline';
@@ -42,14 +42,14 @@ abstract class AdFluxBase extends HTMLElement {
     }
 
     protected async initStyle() {
-        this.shadowRoot.append(h<HTMLStyleElement>('style', style));
+        this.shadowRoot.append(h('style', style));
         await new Promise(requestAnimationFrame);
         await new Promise(requestAnimationFrame);
         this.classList.add('is-initialized');
 
         if (import.meta.env.DEV) {
-            this.shadowRoot.append(h<HTMLStyleElement>('style', devStyle));
-            this.durationDisplay = h<HTMLDivElement>('div.dev-duration', '0.0s');
+            this.shadowRoot.append(h('style', devStyle));
+            this.durationDisplay = h('div.dev-duration', '0.0s');
             this.shadowRoot.append(this.durationDisplay);
         }
     }
@@ -159,7 +159,7 @@ class AdFluxSlot extends AdFluxBase {
 
     protected render(adResult: AdResult) {
         const { mediaUrl, title, landingPage } = adResult;
-        const image = h<HTMLImageElement>('img#ad', {
+        const image = h('img#ad', {
             src: getBackendFullPath(mediaUrl),
             title: title,
             alt: title,
@@ -192,7 +192,7 @@ class AdFluxVideo extends AdFluxBase {
 
     protected render(adResult: AdResult) {
         const { mediaUrl, title, landingPage } = adResult;
-        this.#video = h<HTMLVideoElement>('video#ad', {
+        this.#video = h('video#ad', {
             src: getBackendFullPath(mediaUrl),
             title: title,
             preload: 'auto',
@@ -282,7 +282,7 @@ trackerUrl.searchParams.set('origin', window.location.origin);
 trackerUrl.searchParams.set('domain', window.location.hostname);
 trackerUrl.searchParams.set('category', currentCategory);
 
-const trackerIframe = h<HTMLIFrameElement>('iframe#adflux-tracker', {
+const trackerIframe = h('iframe#adflux-tracker', {
     src: trackerUrl.href,
     style: { display: 'none' },
 });
