@@ -28,7 +28,7 @@ const getCookie = (name: string): string | null => {
 };
 
 const setCookie = (name: string, value: string) => {
-    document.cookie = `${name}=${value}; max-age=630720000; path=/; SameSite=None; Secure`;
+    document.cookie = `${name}=${encodeURIComponent(value)}; max-age=630720000; path=/; SameSite=None; Secure`;
 };
 
 // Cookie Management
