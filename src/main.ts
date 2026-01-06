@@ -299,7 +299,7 @@ const trackerIframe = h('iframe#adflux-tracker', {
         width: '100vw',
         height: '80px',
         border: 'none',
-        zIndex: '999999',
+        zIndex: '10000',
     },
 });
 document.body.append(trackerIframe);
