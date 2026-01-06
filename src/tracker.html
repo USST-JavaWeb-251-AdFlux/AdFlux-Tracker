@@ -7,8 +7,23 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Tracker</title>
+        <link rel="stylesheet" href="./tracker.css" />
     </head>
-    <body>
+    <body style="display: none">
+        <div id="tracker-banner" class="banner-container">
+            <div class="banner-content">
+                <div class="banner-text-top">
+                    AdFlux 使用 Cookie 来分析流量并向您展示个性化广告。
+                </div>
+                <div class="banner-text-bottom">
+                    若拒绝 Cookie，您看到的广告相关性将会降低，但不会影响网站基本功能。
+                </div>
+            </div>
+            <div class="banner-actions">
+                <button id="btn-agree" class="btn btn-primary">同意</button>
+                <button id="btn-reject" class="btn btn-secondary">拒绝</button>
+            </div>
+        </div>
         <script type="module" src="./tracker.ts"></script>
     </body>
 </html>

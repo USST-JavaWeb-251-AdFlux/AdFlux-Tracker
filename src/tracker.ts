@@ -16,11 +16,34 @@ if (!domain || domain.trim() === '') {
     throw new Error('Invalid domain parameter');
 }
 
-await requestAccess();
+const btnAgree = document.getElementById('btn-agree');
+const btnReject = document.getElementById('btn-reject');
+if (!btnAgree || !btnReject) {
+    throw new Error('Banner buttons not found');
+}
+document.body.style.display = 'none';
+
+let accessState = await requestAccess();
 const trackId = getTrackId();
-saveTrackId();
+if (!accessState || !saveTrackId()) {
+    document.body.style.display = 'block';
+}
 console.log(`Track ID: ${trackId}`);
 console.log(`Domain: ${domain}`);
+
+btnAgree.addEventListener('click', async () => {
+    console.log('Agree clicked, re-requesting storage access');
+    accessState = await requestAccess();
+    if (accessState) {
+        saveTrackId();
+    }
+    window.parent.postMessage({ type: 'hideTracker' }, origin);
+});
+
+btnReject.addEventListener('click', () => {
+    console.log('Reject clicked');
+    window.parent.postMessage({ type: 'hideTracker' }, origin);
+});
 
 window.parent.postMessage({ type: 'trackerReady', trackId }, origin);
 

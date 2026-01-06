@@ -1,0 +1,79 @@
+/* src/tracker.css */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+.banner-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #fcfcfc;
+    padding: 0 32px;
+    border-top: 1px solid #eee;
+}
+
+.banner-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+}
+
+.banner-text-top {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    line-height: 1.2;
+}
+
+.banner-text-bottom {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.2;
+}
+
+.banner-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.btn {
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.btn-primary {
+    background-color: #1e9fbe;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #187f98;
+}
+
+.btn-secondary {
+    background-color: #e9ecef;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background-color: #dee2e6;
+}

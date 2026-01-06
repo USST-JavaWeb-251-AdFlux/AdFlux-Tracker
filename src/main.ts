@@ -251,10 +251,15 @@ const appendUtmParams = (baseUrl: string): string => {
 let trackId: string | null = null;
 const trackerOrigin = new URL(import.meta.url).origin;
 const handleMessage = (
-    event: MessageEvent<{
-        type: 'trackerReady';
-        trackId: string;
-    }>,
+    event: MessageEvent<
+        | {
+              type: 'trackerReady';
+              trackId: string;
+          }
+        | {
+              type: 'hideTracker';
+          }
+    >,
 ) => {
     if (event.origin !== trackerOrigin) {
         return;
@@ -264,6 +269,8 @@ const handleMessage = (
         trackId = event.data.trackId;
         customElements.define('adflux-slot', AdFluxSlot);
         customElements.define('adflux-video', AdFluxVideo);
+    } else if (event.data?.type === 'hideTracker') {
+        trackerIframe.style.display = 'none';
     }
 };
 window.addEventListener('message', handleMessage);
@@ -284,7 +291,16 @@ trackerUrl.searchParams.set('category', currentCategory);
 
 const trackerIframe = h('iframe#adflux-tracker', {
     src: trackerUrl.href,
-    style: { display: 'none' },
+    allow: 'storage-access',
+    style: {
+        position: 'fixed',
+        bottom: '0',
+        left: '0',
+        width: '100vw',
+        height: '80px',
+        border: 'none',
+        zIndex: '10000',
+    },
 });
 document.body.append(trackerIframe);
 
