@@ -19,8 +19,14 @@ export function h<K extends string>(
     tag: K,
     propsOrChild?: Props<GetElement<K>> | Child,
     ...children: Child[]
-): GetElement<K> {
-    const el = document.createElement(tag.split(/[#.]/)[0]) as GetElement<K>;
+): GetElement<K>;
+
+export function h<K extends string>(
+    tag: K,
+    propsOrChild?: Props<GetElement<K>> | Child,
+    ...children: Child[]
+): HTMLElement {
+    const el = document.createElement(tag.split(/[#.]/)[0]);
     const id = tag.match(/#([a-zA-Z0-9-]+)/)?.[1];
     if (id) el.id = id;
     const classes = tag.match(/\.([a-zA-Z0-9-]+)/g);
@@ -29,13 +35,11 @@ export function h<K extends string>(
     let actualProps: Props<HTMLElement> = {};
     const actualChildren: Child[] = children;
 
-    const isChild = (obj: unknown): obj is Child =>
-        typeof obj !== 'object' || obj instanceof Node || Array.isArray(obj);
     if (propsOrChild !== undefined && propsOrChild !== null) {
-        if (isChild(propsOrChild)) {
+        if (typeof propsOrChild !== 'object' || propsOrChild instanceof Node) {
             actualChildren.unshift(propsOrChild);
         } else {
-            actualProps = propsOrChild as Props<HTMLElement>;
+            actualProps = propsOrChild;
         }
     }
 
