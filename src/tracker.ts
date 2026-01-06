@@ -33,7 +33,8 @@ console.log(`Domain: ${domain}`);
 
 btnAgree.addEventListener('click', async () => {
     console.log('Agree clicked, re-requesting storage access');
-    if ((accessState = await requestAccess())) {
+    accessState = await requestAccess();
+    if (accessState) {
         saveTrackId();
     }
     window.parent.postMessage({ type: 'hideTracker' }, origin);
