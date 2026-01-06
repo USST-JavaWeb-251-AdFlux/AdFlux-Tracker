@@ -5,18 +5,23 @@ const trackIdKey = 'AdFluxTrackId';
 let accessState: boolean | null = null;
 
 export const requestAccess = async () => {
+    // Treat browsers that do not support Storage Access API as having access
+    // Since they do not block third-party cookies
     if (typeof document.requestStorageAccess !== 'function') {
-        return (accessState = false);
+        return (accessState = true);
     }
 
-    try {
-        // Always request access
-        await document.requestStorageAccess();
-        accessState = await document.hasStorageAccess();
-        console.log('Storage access request result:', accessState);
-    } catch (error) {
-        console.error('Failed to request storage access:', error);
-        accessState = false;
+    accessState = await document.hasStorageAccess();
+    console.log('Storage access request result:', accessState);
+    if (!accessState) {
+        try {
+            await document.requestStorageAccess();
+            accessState = await document.hasStorageAccess();
+            console.log('Storage access request result:', accessState);
+        } catch (error) {
+            console.error('Failed to request storage access:', error);
+            accessState = false;
+        }
     }
     return accessState;
 };
