@@ -88,8 +88,8 @@ export default defineConfig(({ mode }) => {
             },
         },
         server: {
-            open: '/debug.html',
-            host: '127.0.0.1',
+            open: '/dev.html',
+            host: 'localhost',
             port: 5174,
             strictPort: true,
         },
