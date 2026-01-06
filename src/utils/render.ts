@@ -21,9 +21,9 @@ export function h<K extends string>(
     ...children: Child[]
 ): GetElement<K> {
     const el = document.createElement(tag.split(/[#.]/)[0]) as GetElement<K>;
-    const id = tag.match(/#([a-z0-9-]+)/i)?.[1];
+    const id = tag.match(/#([a-zA-Z0-9-]+)/)?.[1];
     if (id) el.id = id;
-    const classes = tag.match(/\.([a-z0-9-]+)/gi);
+    const classes = tag.match(/\.([a-zA-Z0-9-]+)/g);
     if (classes) classes.forEach((c) => el.classList.add(c.slice(1)));
 
     let actualProps: Props<HTMLElement> = {};
