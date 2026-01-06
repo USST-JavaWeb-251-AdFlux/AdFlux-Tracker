@@ -14,17 +14,7 @@ import type { ValueOf } from '@/utils/enum';
 import { getBackendFullPath } from '@/utils/request';
 import { Timer } from '@/utils/timer';
 import style from '@/style.css?inline';
-
-const appendUtmParams = (baseUrl: string): string => {
-    try {
-        const url = new URL(baseUrl);
-        url.searchParams.set('utm_source', 'adflux');
-        url.searchParams.set('utm_medium', 'cpc');
-        return url.toString();
-    } catch {
-        return baseUrl;
-    }
-};
+import devStyle from '@/dev.css?inline';
 
 // Define AdFluxBase Element
 abstract class AdFluxBase extends HTMLElement {
@@ -35,30 +25,37 @@ abstract class AdFluxBase extends HTMLElement {
     protected durationDisplay: HTMLElement | null = null;
     protected lastApiUpdateTime: number = 0;
 
+    declare shadowRoot: ShadowRoot;
+
     protected abstract render(adResult: AdResult): void;
 
     protected getDuration(): number {
         return this.timer.getDuration();
     }
 
-    connectedCallback() {}
+    connectedCallback() {
+        this.attachShadow({ mode: 'open' });
+    }
 
     disconnectedCallback() {
         this.timer.stop();
     }
 
-    protected async fetchAd(adType: ValueOf<typeof AdType>, adLayout: ValueOf<typeof AdLayout>) {
-        this.attachShadow({ mode: 'open' });
-        const shadowRoot = this.shadowRoot as ShadowRoot;
-        shadowRoot.append(h<HTMLStyleElement>('style', style));
+    protected async initStyle() {
+        this.shadowRoot.append(h<HTMLStyleElement>('style', style));
         await new Promise(requestAnimationFrame);
         await new Promise(requestAnimationFrame);
         this.classList.add('is-initialized');
 
         if (import.meta.env.DEV) {
+            this.shadowRoot.append(h<HTMLStyleElement>('style', devStyle));
             this.durationDisplay = h<HTMLDivElement>('div.dev-duration', '0.0s');
-            shadowRoot.append(this.durationDisplay);
+            this.shadowRoot.append(this.durationDisplay);
         }
+    }
+
+    protected async fetchAd(adType: ValueOf<typeof AdType>, adLayout: ValueOf<typeof AdLayout>) {
+        await this.initStyle();
 
         try {
             if (!trackId) {
@@ -238,6 +235,17 @@ class AdFluxVideo extends AdFluxBase {
         }
     }
 }
+
+const appendUtmParams = (baseUrl: string): string => {
+    try {
+        const url = new URL(baseUrl);
+        url.searchParams.set('utm_source', 'adflux');
+        url.searchParams.set('utm_medium', 'cpc');
+        return url.toString();
+    } catch {
+        return baseUrl;
+    }
+};
 
 // Upgrade AdFluxSlot Elements after Tracker is Ready
 let trackId: string | null = null;
