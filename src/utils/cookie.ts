@@ -12,12 +12,12 @@ export const requestAccess = async () => {
     }
 
     accessState = await document.hasStorageAccess();
-    console.log('Storage access request result:', accessState);
+    console.log('Initial storage access check result:', accessState);
     if (!accessState) {
         try {
             await document.requestStorageAccess();
             accessState = await document.hasStorageAccess();
-            console.log('Storage access request result:', accessState);
+            console.log('Storage access after request result:', accessState);
         } catch (error) {
             console.error('Failed to request storage access:', error);
             accessState = false;
